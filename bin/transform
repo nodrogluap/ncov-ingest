@@ -2,10 +2,18 @@
 """
 Parse the GISAID JSON load into a metadata tsv and a FASTA file.
 """
+import os
 import argparse
 from pathlib import Path
+import json
 import fsspec
+import logging
+import requests
 import pandas as pd
+from datetime import datetime
+from urllib3.exceptions import HTTPError
+
+LOG = logging.getLogger(__name__)
 
 
 # Note: 'sequence' should NEVER appear in these lists!
@@ -247,6 +255,60 @@ def update_metadata(curated_gisaid_data: pd.DataFrame) -> pd.DataFrame:
     return curated_gisaid_data
 
 
+def warn_future_dates(gisaid_data: pd.DataFrame):
+    """
+    Sends a Slack message detailing any GISAID EPI ISL IDs in a given
+    *gisaid_data* DataFrame that have collection dates from the future (e.g. a
+    date > now).
+    """
+    def future_date(row: pd.Series):
+        """
+        Inserts a key-value pair in the within-scope *future_dates* dictionary
+        for every GISAID EPI ISL ID and future date, respectively.
+        """
+        for datetime_format in ('%Y-%m-%d', '%Y-%m', '%Y'):
+            try:
+                date = datetime.strptime(row.date, datetime_format)
+            except ValueError:
+                continue
+
+            if date > datetime.now():
+                future_dates[row.gisaid_epi_isl] = row.date
+
+            return
+
+    future_dates = {}
+    gisaid_data.apply(future_date, axis=1)
+
+    if not future_dates:
+        return
+
+    payload = {
+        "channel": f"{os.environ.get('SLACK_CHANNEL')}",
+        "text": ":crystal_ball: Future dates found.",
+        "blocks": [{
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ":crystal_ball: Future dates found.",
+            },
+            "fields": [
+                {"type": "mrkdwn", "text": f"*{uid}*: {date}"}
+                    for uid, date in future_dates.items()
+            ],
+        }],
+    }
+
+    response = requests.post("https://slack.com/api/chat.postMessage",
+        data=json.dumps(payload),
+        headers={
+            'Content-type': 'application/json',
+            'Authorization': f'Bearer {os.environ.get("SLACK_TOKEN")}'
+        })
+
+    response.raise_for_status()
+
+
 if __name__ == '__main__':
     base = Path(__file__).resolve().parent.parent
 
@@ -294,6 +356,12 @@ if __name__ == '__main__':
     gisaid_data = parse_age(gisaid_data)
     gisaid_data = parse_sex(gisaid_data)
     gisaid_data = update_metadata(gisaid_data)
+
+    # Warn about future dates
+    try:
+        warn_future_dates(gisaid_data)
+    except HTTPError:
+        LOG.info("Slack message couldn't be sent, but continuing anyway.")
 
     # Export additional info
     gisaid_data[ADDITIONAL_INFO_COLUMNS] \
