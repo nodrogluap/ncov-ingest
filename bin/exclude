@@ -10,7 +10,7 @@ import requests
 import argparse
 import pandas as pd
 from pathlib import Path
-from datetime import datetime
+from datetime import date
 from urllib3.exceptions import HTTPError
 
 
@@ -28,16 +28,10 @@ def warn_future_dates(gisaid_data: pd.DataFrame):
         Inserts a key-value pair in the within-scope *future_dates* dictionary
         for every GISAID EPI ISL ID and future date, respectively.
         """
-        for datetime_format in ('%Y-%m-%d', '%Y-%m', '%Y'):
-            try:
-                date = datetime.strptime(row.date, datetime_format)
-            except ValueError:
-                continue
+        if row.date > str(date.today()):
+            future_dates[row.gisaid_epi_isl] = row.date
 
-            if date > datetime.now():
-                future_dates[row.gisaid_epi_isl] = row.date
-
-            return
+        return
 
     future_dates = {}
     gisaid_data.apply(future_date, axis=1)
