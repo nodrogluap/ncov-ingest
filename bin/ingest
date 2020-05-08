@@ -51,9 +51,12 @@ fi
   --output-metadata data/metadata.tsv \
   --output-fasta data/sequences.fasta
 
+./bin/exclude data/metadata.tsv > data/exclude.txt
+
 if [[ "$branch" == master ]]; then
     ./bin/notify-on-metadata-change data/metadata.tsv "$S3_SRC/metadata.tsv.gz"
     ./bin/notify-on-additional-info-change data/additional_info.tsv "$S3_SRC/additional_info.tsv.gz"
+    ./bin/notify-on-exclude-change data/exclude.txt "$S3_SRC/exclude.txt"
 
     ./bin/rebuild-staging data/metadata.tsv "$S3_SRC/metadata.tsv.gz" \
       data/sequences.fasta "$S3_SRC/sequences.fasta.gz"
@@ -61,6 +64,7 @@ fi
 
 ./bin/upload-to-s3 ${silent:+--quiet} data/metadata.tsv "$S3_DST/metadata.tsv.gz"
 ./bin/upload-to-s3 ${silent:+--quiet} data/additional_info.tsv "$S3_DST/additional_info.tsv.gz"
+./bin/upload-to-s3 ${silent:+--quiet} data/exclude.txt "$S3_DST/exclude.txt"
 ./bin/upload-to-s3 ${silent:+--quiet} data/sequences.fasta "$S3_DST/sequences.fasta.gz"
 
 ./bin/fetch-from-genbank data/metadata.tsv > data/genbank.fasta

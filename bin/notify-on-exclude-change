@@ -1,0 +1,31 @@
+#!/bin/bash
+set -euo pipefail
+
+: "${SLACK_TOKEN:?The SLACK_TOKEN environment variable is required.}"
+
+bin="$(dirname "$0")"
+
+src="${1:?A source exclude txt file is required as the first argument.}"
+dst="${2:?A destination exclude txt s3:// URL is required as the second argument.}"
+
+dst_local="$(mktemp -t exclude-XXXXXX.txt)"
+
+diff="$(mktemp -t exclude-additions-XXXXXX)"
+
+trap "rm -f '$dst_local' '$diff'" EXIT
+
+aws s3 cp --no-progress "$dst" - | gunzip -cfq > "$dst_local"
+
+comm -13 \
+    <(sort "$dst_local") \
+    <(sort "$src") \
+    > "$diff"
+
+if [[ -n "$(< "$diff")" ]]; then
+    echo
+    echo "Notifying Slack about exclude additions."
+    "$bin"/notify-slack ":scissors: Additional sequences excluded"
+    "$bin"/notify-slack --upload "exclude-additions.txt" < "$diff"
+else
+    echo "No exclude additions."
+fi
