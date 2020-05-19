@@ -5,6 +5,11 @@ from pathlib import Path
 
 base = Path(__file__).resolve().parent.parent
 
+import sys
+sys.path.insert(0, str(base / "lib"))
+from utils.hierarchy_dataframe import hierarchy_dataframe
+
+
 HIERARCHY_COLUMNS = ['region', 'country', 'division']
 
 parser = argparse.ArgumentParser(
@@ -23,22 +28,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-metadata = pd \
-    .read_csv(args.metadata, sep='\t') \
-    .rename(columns={
-        resolution: f'{resolution}_strain' for resolution in HIERARCHY_COLUMNS
-    })
+metadata = pd.read_csv(args.metadata, sep='\t')
 
-known_hierarchies = pd \
-    .wide_to_long(metadata,
-        stubnames=HIERARCHY_COLUMNS,
-        i=['gisaid_epi_isl'],
-        j="resolution_type",
-        sep='_',
-        suffix='\w+') \
-    .reset_index()[HIERARCHY_COLUMNS] \
-    .drop_duplicates() \
-    .reset_index(drop=True) \
-    .sort_values(by=HIERARCHY_COLUMNS)
-
+known_hierarchies = hierarchy_dataframe(metadata, HIERARCHY_COLUMNS)
 print(known_hierarchies.to_csv(index=False, sep='\t'))
