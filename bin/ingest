@@ -47,6 +47,8 @@ if [[ "$branch" == master ]]; then
 fi
 ./bin/upload-to-s3 --quiet data/gisaid.ndjson "$S3_DST/gisaid.ndjson.gz"
 
+./bin/create-hierarchy > data/location_hierarchy.tsv
+
 ./bin/transform data/gisaid.ndjson \
   --output-metadata data/metadata.tsv \
   --output-fasta data/sequences.fasta
@@ -62,6 +64,7 @@ fi
 ./bin/upload-to-s3 ${silent:+--quiet} data/metadata.tsv "$S3_DST/metadata.tsv.gz"
 ./bin/upload-to-s3 ${silent:+--quiet} data/additional_info.tsv "$S3_DST/additional_info.tsv.gz"
 ./bin/upload-to-s3 ${silent:+--quiet} data/sequences.fasta "$S3_DST/sequences.fasta.gz"
+./bin/upload-to-s3 ${silent:+--quiet} data/location_hierarchy.tsv "$S3_DST/location_hierarchy.tsv.gz"
 
 ./bin/fetch-from-genbank > data/genbank.ndjson
 ./bin/upload-to-s3 ${silent:+--quiet} data/genbank.ndjson "$S3_DST/genbank.ndjson.gz"
