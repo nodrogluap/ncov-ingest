@@ -211,7 +211,7 @@ def write_fasta_file(sequence_data: pd.DataFrame):
             fastafile.write(f">{row['strain']}\n")
             fastafile.write(f"{row['sequence']}\n")
 
-def update_metadata(curated_gisaid_data: pd.DataFrame) -> pd.DataFrame:
+def update_metadata(curated_gisaid_data: pd.DataFrame, annotations: pd.DataFrame) -> pd.DataFrame:
     """ """
     # Add hardcoded metadata which is *almost* always true
     hardcoded_metadata = generate_hardcoded_metadata(curated_gisaid_data)
@@ -220,8 +220,7 @@ def update_metadata(curated_gisaid_data: pd.DataFrame) -> pd.DataFrame:
 
     if args.annotations:
         # Use the curated annotations tsv to update any column values
-        user_provided_annotations = pd.read_csv(args.annotations, header=None, sep='\t', comment="#")
-        for index, (strain, epi_isl, key, value) in user_provided_annotations.iterrows():
+        for index, (strain, epi_isl, key, value) in annotations.iterrows():
             # Strip any whitespace remaining from inline comments after the final column.
             if isinstance(value, str):
                 value = value.rstrip()
@@ -364,7 +363,10 @@ if __name__ == '__main__':
     # Write intermediate metadata to file for comparison before annotations
     gisaid_data.to_csv(base / 'data/draft_metadata.tsv', sep='\t', index=False)
 
-    gisaid_data = update_metadata(gisaid_data)
+    if args.annotations:
+        annotations = pd.read_csv(args.annotations, header=None, sep='\t', comment="#")
+
+    gisaid_data = update_metadata(gisaid_data, annotations)
     validate_metadata(gisaid_data)
 
     # Export additional info
