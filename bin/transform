@@ -257,6 +257,33 @@ def validate_metadata(metadata: pd.DataFrame,
     Performs several tests on the given *metadata*, raising an
     ``AssertionError`` if the tests fail.
     """
+    def annotation_hierarchies(annotations: pd.DataFrame) -> Optional[pd.DataFrame]:
+        """
+        Returns a ``pd.DataFrame` of location hierarchies from the annotations
+        file if annotations are provided, else returns ``None``.
+        """
+        if not args.annotations:
+            return
+
+        annotations.columns = ['strain', 'gisaid_epi_isl', 'variable', 'value']
+        annotations = annotations \
+            .drop_duplicates(['gisaid_epi_isl', 'variable'], keep='last')
+
+        keep_columns = location_hierarchy_columns + \
+            [ f'{resolution}_exposure' for resolution in location_hierarchy_columns]
+        # Avoid a KeyError if the annotations file doesn't contain all of
+        # our resolution columns
+        columns = [ col for col in annotations.columns if col in keep_columns ]
+
+        wide_annotations = annotations \
+            .pivot(index='gisaid_epi_isl', columns='variable', values='value')
+        wide_annotations = wide_annotations[columns].dropna()
+
+        wide_annotations['gisaid_epi_isl'] = wide_annotations.index
+        wide_annotations = wide_annotations.reset_index(drop=True)
+
+        return hierarchy_dataframe(wide_annotations, location_hierarchy_columns)
+
     def no_missing_hierarchy_data():
         """
         Raises an ``AssertionError`` if the metadata have missing values in the
@@ -289,7 +316,11 @@ def validate_metadata(metadata: pd.DataFrame,
             f"in the metadata: {unknown_hierarchies}"
 
 
-    known_location_hierarchies = pd.read_csv(args.location_hierarchy, sep='\t')
+    # Combine metadata location hierarchies with those coded in annotations
+    known_location_hierarchies = pd.concat([
+        pd.read_csv(args.location_hierarchy, sep='\t'),
+        annotation_hierarchies(annotations)]
+        ).drop_duplicates()
 
     exceptions = []
 
