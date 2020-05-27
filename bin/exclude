@@ -3,15 +3,11 @@
 Creates a list of exclusions from the provided metadata TSV in the Nextstrain
 exclusions.txt convention. Prints the list to stdout.
 """
-import os
-import json
 import logging
-import requests
 import argparse
 import pandas as pd
 from pathlib import Path
 from datetime import date
-from urllib3.exceptions import HTTPError
 
 
 LOG = logging.getLogger(__name__)
