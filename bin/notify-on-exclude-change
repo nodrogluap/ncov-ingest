@@ -21,7 +21,7 @@ comm -13 \
     <(sort "$src") \
     > "$diff"
 
-if [[ -n "$(< "$diff")" ]]; then
+if [[ -s "$diff" ]]; then
     echo
     echo "Notifying Slack about exclude additions."
     "$bin"/notify-slack ":scissors: Additional sequences excluded"
