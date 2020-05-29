@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+
+: "${SLACK_TOKEN:?The SLACK_TOKEN environment variable is required.}"
+
+bin="$(dirname "$0")"
+
+src="${1:?A source new location hierarchy TSV file is required as the first argument.}"
+
+if [[ -s "$src" ]]; then
+    echo "Notifying Slack about new location hierarchies in the metadata."
+    "$bin"/notify-slack --upload "new-location-hierarchies.tsv" < "$src"
+fi

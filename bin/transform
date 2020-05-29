@@ -301,20 +301,17 @@ def validate_metadata(metadata: pd.DataFrame,
         """
         metadata_hierarchies = hierarchy_dataframe(metadata, location_hierarchy_columns)
 
-        # Use dataframe indices for easier comparison of row values
-        known_location_hierarchies.index = known_location_hierarchies[location_hierarchy_columns]
-        metadata_hierarchies.index = metadata_hierarchies[location_hierarchy_columns]
+        all_hierarchies = metadata_hierarchies.merge(
+            known_location_hierarchies,
+            how='outer',
+            indicator=True
+        )
 
-        unknown_hierarchies = [
-            idx \
-            for idx, row
-            in metadata_hierarchies.iterrows() \
-            if not idx in known_location_hierarchies.index
-        ]
+        unknown_hierarchies = all_hierarchies[all_hierarchies._merge == 'left_only']
 
-        assert not unknown_hierarchies, "The following unknown hierarchies exist " \
-            f"in the metadata: {unknown_hierarchies}"
-
+        if not unknown_hierarchies.empty:
+            unknown_hierarchies[location_hierarchy_columns] \
+                .to_csv(args.output_new_location_hierarchies, sep='\t', index=False)
 
     # Combine metadata location hierarchies with those coded in annotations
     known_location_hierarchies = pd.concat([
@@ -377,6 +374,10 @@ if __name__ == '__main__':
     parser.add_argument("--output-additional-info",
         default=base / "data/additional_info.tsv",
         help="Output location of additional info tsv. Defaults to `data/additional_info.tsv`")
+    parser.add_argument("--output-new-location-hierarchies",
+        default=base / "data/new_location_hierarchies.tsv",
+        help="Output location of new location hierarchies tsv. Defaults to "
+            "`data/new_location_hierarchies.tsv`")
     args = parser.parse_args()
 
 
