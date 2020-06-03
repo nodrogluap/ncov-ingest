@@ -296,8 +296,10 @@ def validate_metadata(metadata: pd.DataFrame,
 
     def no_unknown_hierarchies(known_location_hierarchies: pd.DataFrame):
         """
-        Raises an ``AssertionError`` if the metadata contain hierarchies not
-        found in the defined location hierarchy.
+        Produces a new ``pd.DataFrame`` of all new location hierarchies in the
+        curated metadata that don't exist in the given
+        *known_location_hierarchies* `pd.DataFrame``. If the resulting DataFrame
+        is not empty, prints it as a TSV to the specified output location.
         """
         metadata_hierarchies = hierarchy_dataframe(metadata, location_hierarchy_columns)
 
