@@ -30,5 +30,5 @@ args = parser.parse_args()
 
 metadata = pd.read_csv(args.metadata, sep='\t')
 
-known_hierarchies = hierarchy_dataframe(metadata, HIERARCHY_COLUMNS)
+known_hierarchies = hierarchy_dataframe(metadata, 'gisaid_epi_isl', HIERARCHY_COLUMNS)
 print(known_hierarchies.to_csv(index=False, sep='\t'))

@@ -282,7 +282,8 @@ def validate_metadata(metadata: pd.DataFrame,
         wide_annotations['gisaid_epi_isl'] = wide_annotations.index
         wide_annotations = wide_annotations.reset_index(drop=True)
 
-        return hierarchy_dataframe(wide_annotations, location_hierarchy_columns)
+        return hierarchy_dataframe(wide_annotations, 'gisaid_epi_isl',
+            location_hierarchy_columns)
 
     def no_missing_hierarchy_data():
         """
@@ -301,7 +302,8 @@ def validate_metadata(metadata: pd.DataFrame,
         *known_location_hierarchies* `pd.DataFrame``. If the resulting DataFrame
         is not empty, prints it as a TSV to the specified output location.
         """
-        metadata_hierarchies = hierarchy_dataframe(metadata, location_hierarchy_columns)
+        metadata_hierarchies = hierarchy_dataframe(metadata, 'gisaid_epi_isl',
+            location_hierarchy_columns)
 
         all_hierarchies = metadata_hierarchies.merge(
             known_location_hierarchies,
