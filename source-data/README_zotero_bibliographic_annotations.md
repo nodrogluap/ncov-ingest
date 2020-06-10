@@ -1,10 +1,10 @@
 # Bibliographic information integration option for NextStrain
 
-The Zotero branch of ncov-ingest holds the metadata and scripts necessary to generate the paper_url and title annotation information for the SAS-CoV-2 Nextstrain annotations.tsv file.
+The Zotero branch of ncov-ingest holds the metadata and scripts necessary to generate the ``paper_url`` and ``title`` annotation information for the SARS-CoV-2 Nextstrain annotations.tsv file.
 
 The intention is for updating of genomic epidemiology bibliographic information to be done through the Zotero Web portal [here](https://www.zotero.org/groups/2512356/covid19_genomic_epidemiology_bibliography/library) 
 
-This portal automatically fetches articles and provides titles, urls, DOIs, etc. and Paul Gordon (nodrogluap) has been painstakingly manually adding virus names (e.g. Australia/VIC65/2020) to those records where appropriate.
+This portal automatically fetches articles and provides titles, URLs, DOIs, etc. and Paul Gordon (nodrogluap) has been painstakingly manually adding virus names (e.g. Australia/VIC65/2020) to those records where appropriate.
 
 Updated versions of the Zotero-stored information can be exported one hundred papers at a time to RDF files via the portal interface. These are the files epi_genomics_zotero_biblio_part_#.rdf
 
